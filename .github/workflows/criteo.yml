@@ -1,0 +1,32 @@
+name: Build Milvus Artifacts
+
+on:
+  release:
+    types: [published]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build Milvus
+      run: ./build/builder.sh make install
+
+    - name: Build Package
+      run: |
+        tar -czvf ./milvus.tar.gz ./bin/ \
+          ./lib/ \
+          ./configs/
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: ./milvus.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
